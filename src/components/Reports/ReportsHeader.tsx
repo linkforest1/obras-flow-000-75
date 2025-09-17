@@ -4,16 +4,19 @@ import { Button } from "@/components/ui/button";
 import { BarChart3, Download, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { WeekFilter } from "@/components/WeekFilter";
+import { DisciplineFilter } from "@/components/DisciplineFilter";
 
 interface ReportsHeaderProps {
   selectedWeek: string;
+  selectedDiscipline: string;
   onWeekChange: (week: string) => void;
+  onDisciplineChange: (discipline: string) => void;
   onExportPDF: () => void;
   onSignOut: () => void;
   isExporting: boolean;
 }
 
-export function ReportsHeader({ selectedWeek, onWeekChange, onExportPDF, onSignOut, isExporting }: ReportsHeaderProps) {
+export function ReportsHeader({ selectedWeek, selectedDiscipline, onWeekChange, onDisciplineChange, onExportPDF, onSignOut, isExporting }: ReportsHeaderProps) {
   return (
     <header className="bg-card border-b border-border p-3 md:p-4">
       <div className="flex items-center justify-between gap-2">
@@ -36,6 +39,7 @@ export function ReportsHeader({ selectedWeek, onWeekChange, onExportPDF, onSignO
             <ThemeToggle />
           </div>
           <WeekFilter selectedWeek={selectedWeek} onWeekChange={onWeekChange} />
+          <DisciplineFilter selectedDiscipline={selectedDiscipline} onDisciplineChange={onDisciplineChange} />
           <Button 
             onClick={onExportPDF} 
             disabled={isExporting}

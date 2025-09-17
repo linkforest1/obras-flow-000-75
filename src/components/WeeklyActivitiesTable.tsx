@@ -7,6 +7,7 @@ import { useFilters } from "@/contexts/FilterContext";
 
 interface WeeklyActivitiesTableProps {
   selectedWeek: string;
+  selectedDiscipline?: string;
 }
 
 const statusColors = {
@@ -35,7 +36,7 @@ const priorityLabels = {
   low: 'Baixa'
 };
 
-export function WeeklyActivitiesTable({ selectedWeek }: WeeklyActivitiesTableProps) {
+export function WeeklyActivitiesTable({ selectedWeek, selectedDiscipline }: WeeklyActivitiesTableProps) {
   const { activities, loading } = useActivities();
   const { filters } = useFilters();
 
@@ -57,10 +58,15 @@ export function WeeklyActivitiesTable({ selectedWeek }: WeeklyActivitiesTablePro
     );
   }
 
-  // Aplicar filtros incluindo selectedWeek
+  // Aplicar filtros incluindo selectedWeek e selectedDiscipline
   const filteredActivities = activities.filter(activity => {
     // Filtro por semana selecionada
     if (selectedWeek !== 'all' && String(activity.week) !== selectedWeek) {
+      return false;
+    }
+    
+    // Filtro por disciplina selecionada
+    if (selectedDiscipline && selectedDiscipline !== 'all' && activity.discipline !== selectedDiscipline) {
       return false;
     }
 

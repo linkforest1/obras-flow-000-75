@@ -28,6 +28,7 @@ export default function Reports() {
   const reportRef = useRef<HTMLDivElement>(null);
   const { exportToPDF, isExporting } = usePDFExport();
   const [selectedWeek, setSelectedWeek] = useState<string>('all');
+  const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const { activities } = useActivities();
   const { reports } = useDailyReports();
@@ -54,10 +55,16 @@ export default function Reports() {
       selectedWeek
     });
 
-    // Filtrar atividades baseado na semana selecionada
-    const filteredActivities = selectedWeek === 'all' 
-      ? activities || []
-      : (activities || []).filter(activity => String(activity.week) === selectedWeek);
+    // Filtrar atividades baseado na semana e disciplina selecionadas
+    let filteredActivities = activities || [];
+    
+    if (selectedWeek !== 'all') {
+      filteredActivities = filteredActivities.filter(activity => String(activity.week) === selectedWeek);
+    }
+    
+    if (selectedDiscipline !== 'all') {
+      filteredActivities = filteredActivities.filter(activity => activity.discipline === selectedDiscipline);
+    }
 
     // Filtrar desvios baseado na semana selecionada (se necessário)
     const filteredReports = reports || [];
@@ -68,9 +75,17 @@ export default function Reports() {
       totalDeviations: getDeviationStats(filteredReports).total
     };
 
+    const reportSuffix = [];
+    if (selectedWeek !== 'all') reportSuffix.push(`semana-${selectedWeek}`);
+    if (selectedDiscipline !== 'all') reportSuffix.push(`disciplina-${selectedDiscipline.replace(/\s+/g, '-').toLowerCase()}`);
+    
+    const reportName = reportSuffix.length > 0 
+      ? `relatorio-gerencial-${reportSuffix.join('-')}`
+      : 'relatorio-gerencial-completo';
+
     await exportToPDF(
       null, 
-      `relatorio-gerencial-${selectedWeek === 'all' ? 'completo' : `semana-${selectedWeek}`}`, 
+      reportName, 
       selectedWeek, 
       filteredActivities, 
       rdoData
@@ -81,10 +96,16 @@ export default function Reports() {
     if (!activities) return [];
     const recommendations = [];
     
-    // Filtrar atividades por semana se necessário
-    const filteredActivities = selectedWeek === 'all' 
-      ? activities 
-      : activities.filter(activity => String(activity.week) === selectedWeek);
+    // Filtrar atividades por semana e disciplina se necessário
+    let filteredActivities = activities;
+    
+    if (selectedWeek !== 'all') {
+      filteredActivities = filteredActivities.filter(activity => String(activity.week) === selectedWeek);
+    }
+    
+    if (selectedDiscipline !== 'all') {
+      filteredActivities = filteredActivities.filter(activity => activity.discipline === selectedDiscipline);
+    }
 
     const delayedByDiscipline = filteredActivities.filter(a => a.status === 'delayed').reduce((acc: any, activity) => {
       const discipline = activity.discipline || 'Geral';
@@ -143,7 +164,9 @@ export default function Reports() {
     <FilterProvider>
       <ReportsContent 
         selectedWeek={selectedWeek} 
+        selectedDiscipline={selectedDiscipline}
         setSelectedWeek={setSelectedWeek} 
+        setSelectedDiscipline={setSelectedDiscipline}
         handleExportPDF={handleExportPDF} 
         handleSignOut={handleSignOut} 
         isExporting={isExporting} 
@@ -158,7 +181,7 @@ export default function Reports() {
   );
 }
 
-function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handleSignOut, isExporting, activities, reports, getRecommendations, deviationStats, totalDeviations, reportRef }: any) {
+function ReportsContent({ selectedWeek, selectedDiscipline, setSelectedWeek, setSelectedDiscipline, handleExportPDF, handleSignOut, isExporting, activities, reports, getRecommendations, deviationStats, totalDeviations, reportRef }: any) {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const { filters, setFilters } = useFilters();
 
@@ -173,7 +196,9 @@ function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handle
         <main className="flex-1 flex flex-col overflow-hidden bg-background pb-[60px] md:pb-0">
           <ReportsHeader 
             selectedWeek={selectedWeek} 
+            selectedDiscipline={selectedDiscipline}
             onWeekChange={setSelectedWeek} 
+            onDisciplineChange={setSelectedDiscipline}
             onExportPDF={handleExportPDF} 
             onSignOut={handleSignOut} 
             isExporting={isExporting} 
@@ -204,7 +229,7 @@ function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handle
                 </div>
 
                 <TabsContent value="overview" className="space-y-6">
-                  <FilteredMetricsCards selectedWeek={selectedWeek} />
+                  <FilteredMetricsCards selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
                   
                   <div className="grid gap-6 md:grid-cols-2">
                     <Card>
@@ -218,7 +243,7 @@ function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handle
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <FilteredActivityProgressChart selectedWeek={selectedWeek} />
+                        <FilteredActivityProgressChart selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
                       </CardContent>
                     </Card>
 
@@ -233,7 +258,7 @@ function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handle
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <FilteredDisciplineDistributionChart selectedWeek={selectedWeek} />
+                        <FilteredDisciplineDistributionChart selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
                       </CardContent>
                     </Card>
                   </div>
@@ -251,7 +276,7 @@ function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handle
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <WeeklyActivitiesTable selectedWeek={selectedWeek} />
+                      <WeeklyActivitiesTable selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -277,7 +302,7 @@ function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handle
                 </TabsContent>
 
                 <TabsContent value="performance" className="space-y-6">
-                  <FilteredMetricsCards selectedWeek={selectedWeek} />
+                  <FilteredMetricsCards selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
                   
                   <Card>
                     <CardHeader>
@@ -287,7 +312,7 @@ function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handle
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <FilteredActivityProgressChart selectedWeek={selectedWeek} />
+                      <FilteredActivityProgressChart selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -388,7 +413,7 @@ function ReportsContent({ selectedWeek, setSelectedWeek, handleExportPDF, handle
                 </TabsContent>
 
                 <TabsContent value="issues" className="space-y-6">
-                  <IssuesCards selectedWeek={selectedWeek} />
+                  <IssuesCards selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
 
                   <Card>
                     <CardHeader>

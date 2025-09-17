@@ -6,9 +6,10 @@ import { useActivities } from "@/hooks/useActivities";
 
 interface IssuesCardsProps {
   selectedWeek: string;
+  selectedDiscipline?: string;
 }
 
-export function IssuesCards({ selectedWeek }: IssuesCardsProps) {
+export function IssuesCards({ selectedWeek, selectedDiscipline }: IssuesCardsProps) {
   const { activities } = useActivities();
 
   if (!activities) {
@@ -29,8 +30,19 @@ export function IssuesCards({ selectedWeek }: IssuesCardsProps) {
     );
   }
 
-  const delayedActivities = activities.filter(a => a.status === 'delayed');
-  const pendingActivities = activities.filter(a => a.status === 'pending');
+  // Aplicar filtros de semana e disciplina
+  const filteredActivities = activities.filter(activity => {
+    if (selectedWeek !== 'all' && String(activity.week) !== selectedWeek) {
+      return false;
+    }
+    if (selectedDiscipline && selectedDiscipline !== 'all' && activity.discipline !== selectedDiscipline) {
+      return false;
+    }
+    return true;
+  });
+
+  const delayedActivities = filteredActivities.filter(a => a.status === 'delayed');
+  const pendingActivities = filteredActivities.filter(a => a.status === 'pending');
 
   return (
     <div className="grid gap-4 md:grid-cols-2">

@@ -6,6 +6,7 @@ import { useFilters } from "@/contexts/FilterContext";
 
 interface FilteredActivityProgressChartProps {
   selectedWeek?: string;
+  selectedDiscipline?: string;
 }
 
 const COLORS = {
@@ -24,7 +25,7 @@ const STATUS_LABELS = {
   not_completed: 'Não concluídas'
 };
 
-export function FilteredActivityProgressChart({ selectedWeek }: FilteredActivityProgressChartProps) {
+export function FilteredActivityProgressChart({ selectedWeek, selectedDiscipline }: FilteredActivityProgressChartProps) {
   const { activities } = useActivities();
   const { filters } = useFilters();
 
@@ -39,10 +40,15 @@ export function FilteredActivityProgressChart({ selectedWeek }: FilteredActivity
     );
   }
 
-  // Aplicar filtros incluindo selectedWeek se fornecido
+  // Aplicar filtros incluindo selectedWeek e selectedDiscipline se fornecidos
   const filteredActivities = activities.filter(activity => {
     // Filtro por semana selecionada se fornecido
     if (selectedWeek && selectedWeek !== 'all' && String(activity.week) !== selectedWeek) {
+      return false;
+    }
+    
+    // Filtro por disciplina selecionada se fornecido
+    if (selectedDiscipline && selectedDiscipline !== 'all' && activity.discipline !== selectedDiscipline) {
       return false;
     }
 

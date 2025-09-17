@@ -6,9 +6,10 @@ import { useFilters } from "@/contexts/FilterContext";
 
 interface FilteredDisciplineDistributionChartProps {
   selectedWeek?: string;
+  selectedDiscipline?: string;
 }
 
-export function FilteredDisciplineDistributionChart({ selectedWeek }: FilteredDisciplineDistributionChartProps) {
+export function FilteredDisciplineDistributionChart({ selectedWeek, selectedDiscipline }: FilteredDisciplineDistributionChartProps) {
   const { activities } = useActivities();
   const { filters } = useFilters();
 
@@ -23,10 +24,15 @@ export function FilteredDisciplineDistributionChart({ selectedWeek }: FilteredDi
     );
   }
 
-  // Aplicar filtros incluindo selectedWeek se fornecido
+  // Aplicar filtros incluindo selectedWeek e selectedDiscipline se fornecidos
   const filteredActivities = activities.filter(activity => {
     // Filtro por semana selecionada se fornecido
     if (selectedWeek && selectedWeek !== 'all' && String(activity.week) !== selectedWeek) {
+      return false;
+    }
+    
+    // Filtro por disciplina selecionada se fornecido
+    if (selectedDiscipline && selectedDiscipline !== 'all' && activity.discipline !== selectedDiscipline) {
       return false;
     }
 
