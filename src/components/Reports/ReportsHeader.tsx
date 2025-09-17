@@ -28,7 +28,7 @@ export function ReportsHeader({ selectedWeek, selectedDiscipline, onWeekChange, 
               <span className="sm:hidden">Relatórios</span>
             </h1>
             <p className="text-xs md:text-sm text-muted-foreground truncate">
-              <span className="hidden sm:inline">Resumo executivo das atividades e métricas semanais</span>
+              <span className="hidden sm:inline">Resumo executivo</span>
               <span className="sm:hidden">Resumo semanal</span>
             </p>
           </div>
