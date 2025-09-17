@@ -24,7 +24,7 @@ export function ReportsHeader({ selectedWeek, selectedDiscipline, onWeekChange, 
           <div className="min-w-0 flex-1">
             <h1 className="text-base md:text-2xl font-bold text-foreground truncate flex items-center gap-2">
               <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-vale-blue" />
-              <span className="hidden sm:inline">Relatórios Gerenciais</span>
+              <span className="hidden sm:inline">Relatórios</span>
               <span className="sm:hidden">Relatórios</span>
             </h1>
             <p className="text-xs md:text-sm text-muted-foreground truncate">
