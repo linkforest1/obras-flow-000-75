@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Building, Calendar, FileText, AlertTriangle, User } from "lucide-react"
 import { useForm } from "react-hook-form";
 import { useDailyReports } from "@/hooks/useDailyReports";
 import { useActivities } from "@/hooks/useActivities";
+import { useState } from "react";
 
 interface EditDailyReportModalProps {
   report: {
@@ -55,15 +55,54 @@ export function EditDailyReportModal({ report, open, onClose }: EditDailyReportM
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<DailyReportFormData>();
   const { updateReport, isUpdating } = useDailyReports();
   const { activities } = useActivities();
+  const [activitySearch, setActivitySearch] = useState('');
+  const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [showActivitySuggestions, setShowActivitySuggestions] = useState(false);
 
   // Watch the activity_id, deviation_type, and responsible to ensure they're controlled properly
   const watchedActivityId = watch("activity_id");
   const watchedDeviationType = watch("deviation_type");
   const watchedResponsible = watch("responsible");
 
+  // Filtrar atividades baseado na pesquisa
+  const filteredActivities = activities?.filter(activity => 
+    activity.title.toLowerCase().includes(activitySearch.toLowerCase()) ||
+    (activity.custom_id && activity.custom_id.toLowerCase().includes(activitySearch.toLowerCase()))
+  ).slice(0, 5) || []; // Limitar a 5 resultados
+
+  const handleActivitySelect = (activity: any) => {
+    setSelectedActivity(activity);
+    setActivitySearch(activity.title);
+    setValue("activity_id", activity.id);
+    setShowActivitySuggestions(false);
+  };
+
+  const handleActivitySearchChange = (value: string) => {
+    setActivitySearch(value);
+    setShowActivitySuggestions(value.length > 0);
+    
+    if (value === '') {
+      setSelectedActivity(null);
+      setValue("activity_id", '');
+    }
+  };
+
   useEffect(() => {
     if (open && report) {
       console.log('Setting form data for report:', report);
+      
+      // Buscar atividade associada se existir
+      if (report.activity_id && activities) {
+        const associatedActivity = activities.find(activity => activity.id === report.activity_id);
+        if (associatedActivity) {
+          setSelectedActivity(associatedActivity);
+          setActivitySearch(associatedActivity.title);
+        }
+      } else {
+        setSelectedActivity(null);
+        setActivitySearch('');
+      }
+      
       reset({
         title: report.title,
         description: report.description || '',
@@ -74,7 +113,7 @@ export function EditDailyReportModal({ report, open, onClose }: EditDailyReportM
         responsible: report.responsible || '',
       });
     }
-  }, [open, report, reset]);
+  }, [open, report, reset, activities]);
 
   const onSubmit = async (data: DailyReportFormData) => {
     console.log('Submitting report update:', data);
@@ -98,6 +137,9 @@ export function EditDailyReportModal({ report, open, onClose }: EditDailyReportM
 
   const handleClose = () => {
     reset();
+    setActivitySearch('');
+    setSelectedActivity(null);
+    setShowActivitySuggestions(false);
     onClose();
   };
 
@@ -187,22 +229,73 @@ export function EditDailyReportModal({ report, open, onClose }: EditDailyReportM
               <Label className="text-sm font-medium text-gray-700">
                 Atividade Associada (Opcional)
               </Label>
-              <Select 
-                value={watchedActivityId || undefined}
-                onValueChange={(value) => setValue("activity_id", value || '')}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Selecione uma atividade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma atividade</SelectItem>
-                  {validActivities.map((activity) => (
-                    <SelectItem key={activity.id} value={activity.id}>
-                      {activity.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative mt-1">
+                <Input
+                  placeholder="Digite para buscar uma atividade..."
+                  value={activitySearch}
+                  onChange={(e) => handleActivitySearchChange(e.target.value)}
+                  onFocus={() => setShowActivitySuggestions(activitySearch.length > 0)}
+                  className="w-full"
+                />
+                
+                {/* Sugestões de atividades */}
+                {showActivitySuggestions && filteredActivities.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {filteredActivities.map((activity) => (
+                      <div
+                        key={activity.id}
+                        className="px-3 py-2 hover:bg-accent cursor-pointer border-b border-border last:border-b-0"
+                        onClick={() => handleActivitySelect(activity)}
+                      >
+                        <div className="font-medium text-sm">{activity.title}</div>
+                        {activity.custom_id && (
+                          <div className="text-xs text-muted-foreground">ID: {activity.custom_id}</div>
+                        )}
+                        <div className="text-xs text-muted-foreground">
+                          {activity.discipline} • {activity.responsible}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Atividade selecionada */}
+                {selectedActivity && (
+                  <div className="mt-2 p-2 bg-muted rounded-md">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium">{selectedActivity.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {selectedActivity.custom_id && `ID: ${selectedActivity.custom_id} • `}
+                          {selectedActivity.discipline} • {selectedActivity.responsible}
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedActivity(null);
+                          setActivitySearch('');
+                          setValue("activity_id", '');
+                        }}
+                        className="h-6 w-6 p-0"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Mensagem quando não há resultados */}
+                {showActivitySuggestions && activitySearch.length > 0 && filteredActivities.length === 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg p-3">
+                    <div className="text-sm text-muted-foreground text-center">
+                      Nenhuma atividade encontrada para "{activitySearch}"
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="md:col-span-2">
