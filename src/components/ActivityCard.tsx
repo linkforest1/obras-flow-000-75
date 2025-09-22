@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Calendar, MapPin, User, Camera, MessageCircle, CheckCircle2, Image, MessageSquare, Settings, Trash2, Plus, XCircle, Clock, Package, Users, Download, RotateCcw, Edit } from "lucide-react";
+import { Calendar, MapPin, User, Camera, MessageCircle, CheckCircle2, Image, MessageSquare, Settings, Trash2, Plus, XCircle, Clock, Package, Users, Download, RotateCcw, Edit, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -14,6 +14,7 @@ import { useActivityInteractions } from "@/hooks/useActivityInteractions";
 import { useActivities } from "@/hooks/useActivities";
 import { useActivityComments } from "@/hooks/useActivityComments";
 import { useActivityPhotos } from "@/hooks/useActivityPhotos";
+import { useHasActivityDeviations } from "@/hooks/useActivityDeviations";
 import { PhotoUploadModal } from "./PhotoUploadModal";
 import { CommentModal } from "./CommentModal";
 import { EmployeeCountModal } from "./EmployeeCountModal";
@@ -128,6 +129,9 @@ export function ActivityCard({
     refetch: refetchPhotos
   } = useActivityPhotos(id);
   const actualPhotosCount = activityPhotos?.length || 0;
+  
+  // Buscar desvios da atividade
+  const { hasDeviations, deviationCount } = useHasActivityDeviations(id);
   const formattedStartDate = startDate ? new Date(startDate + 'T00:00:00').toLocaleDateString('pt-BR') : '';
   const formattedEndDate = endDate ? new Date(endDate + 'T00:00:00').toLocaleDateString('pt-BR') : '';
 
@@ -363,10 +367,25 @@ export function ActivityCard({
 
               <CardHeader className="pb-3 p-4 md:p-6 pr-12">
                 <div className="space-y-3">
-                  {/* Título no topo */}
-                  <h3 className="font-bold text-lg md:text-xl text-foreground leading-tight mx-0 py-[10px]">
-                    {title}
-                  </h3>
+                   {/* Título no topo */}
+                   <div className="flex items-start justify-between gap-2">
+                     <h3 className="font-bold text-lg md:text-xl text-foreground leading-tight mx-0 py-[10px] flex-1">
+                       {title}
+                     </h3>
+                     {hasDeviations && (
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                           <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full text-red-600 text-xs font-medium">
+                             <AlertTriangle className="w-3 h-3" />
+                             <span>{deviationCount}</span>
+                           </div>
+                         </TooltipTrigger>
+                         <TooltipContent>
+                           <p>Esta atividade possui {deviationCount} desvio{deviationCount > 1 ? 's' : ''} reportado{deviationCount > 1 ? 's' : ''}</p>
+                         </TooltipContent>
+                       </Tooltip>
+                     )}
+                   </div>
                   
                   {/* Status, Prioridade e Progresso logo abaixo */}
                   <div className="flex flex-wrap items-center gap-2">
