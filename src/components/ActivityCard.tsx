@@ -368,58 +368,58 @@ export function ActivityCard({
               <CardHeader className="pb-3 p-4 md:p-6 pr-12">
                 <div className="space-y-3">
                    {/* Título no topo */}
-                   <div className="flex items-start justify-between gap-2">
-                     <h3 className="font-bold text-lg md:text-xl text-foreground leading-tight mx-0 py-[10px] flex-1">
-                       {title}
-                     </h3>
-                     {hasDeviations && (
-                       <Tooltip>
-                         <TooltipTrigger asChild>
-                           <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full text-red-600 text-xs font-medium">
-                             <AlertTriangle className="w-3 h-3" />
-                             <span>{deviationCount}</span>
-                           </div>
-                         </TooltipTrigger>
-                         <TooltipContent>
-                           <p>Esta atividade possui {deviationCount} desvio{deviationCount > 1 ? 's' : ''} reportado{deviationCount > 1 ? 's' : ''}</p>
-                         </TooltipContent>
-                       </Tooltip>
-                     )}
+                   <h3 className="font-bold text-lg md:text-xl text-foreground leading-tight mx-0 py-[10px]">
+                     {title}
+                   </h3>
+                   
+                   {/* Status, Prioridade e Progresso logo abaixo */}
+                   <div className="flex flex-wrap items-center gap-2">
+                     <Badge className={cn("text-xs", currentStatusConfig.className)}>
+                       {currentStatusConfig.label}
+                     </Badge>
+                     <Badge variant="outline" className={cn("text-xs", currentPriorityConfig.className)}>
+                       {currentPriorityConfig.label}
+                     </Badge>
+                     <div className="flex items-center gap-2 text-sm">
+                       <span className="font-medium text-vale-blue">{currentProgress}%</span>
+                       {['pending', 'in-progress', 'completed', 'delayed'].includes(status) && <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={e => {
+                           e.stopPropagation();
+                           setShowProgressEditor(!showProgressEditor);
+                         }} disabled={status === 'not-completed'}>
+                               <Settings className="w-3 h-3" />
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>Editar progresso</p>
+                           </TooltipContent>
+                         </Tooltip>}
+                     </div>
                    </div>
-                  
-                  {/* Status, Prioridade e Progresso logo abaixo */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge className={cn("text-xs", currentStatusConfig.className)}>
-                      {currentStatusConfig.label}
-                    </Badge>
-                    <Badge variant="outline" className={cn("text-xs", currentPriorityConfig.className)}>
-                      {currentPriorityConfig.label}
-                    </Badge>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-medium text-vale-blue">{currentProgress}%</span>
-                      {['pending', 'in-progress', 'completed', 'delayed'].includes(status) && <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={e => {
-                          e.stopPropagation();
-                          setShowProgressEditor(!showProgressEditor);
-                        }} disabled={status === 'not-completed'}>
-                              <Settings className="w-3 h-3" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Editar progresso</p>
-                          </TooltipContent>
-                        </Tooltip>}
-                    </div>
-                  </div>
 
                   {/* Barra de progresso */}
                   {['pending', 'in-progress', 'completed', 'delayed'].includes(status) && <Progress value={currentProgress} className="h-2" />}
 
-                  {/* Descrição */}
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {description}
-                  </p>
+                   {/* Descrição */}
+                   <p className="text-sm text-muted-foreground leading-relaxed">
+                     {description}
+                   </p>
+
+                   {/* Alerta de Desvio */}
+                   {hasDeviations && (
+                     <Tooltip>
+                       <TooltipTrigger asChild>
+                         <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full text-red-600 text-xs font-medium w-fit">
+                           <AlertTriangle className="w-3 h-3" />
+                           <span>{deviationCount} desvio{deviationCount > 1 ? 's' : ''} reportado{deviationCount > 1 ? 's' : ''}</span>
+                         </div>
+                       </TooltipTrigger>
+                       <TooltipContent>
+                         <p>Esta atividade possui {deviationCount} desvio{deviationCount > 1 ? 's' : ''} reportado{deviationCount > 1 ? 's' : ''}</p>
+                       </TooltipContent>
+                     </Tooltip>
+                   )}
                   
                   {/* Manual Progress Editor */}
                   {showProgressEditor && <div className="space-y-3 pt-2 border-t" onClick={e => e.stopPropagation()}>
