@@ -12,7 +12,25 @@ serve(async (req) => {
   }
 
   try {
+    // Validate authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Autenticação necessária');
+    }
+
     const { messages } = await req.json();
+    
+    // Input validation
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      throw new Error('Mensagens inválidas');
+    }
+    
+    // Validate message content
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage.content || typeof lastMessage.content !== 'string' || lastMessage.content.length > 1000) {
+      throw new Error('Conteúdo da mensagem inválido ou muito longo');
+    }
+    
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -40,7 +58,7 @@ serve(async (req) => {
           id,
           comment_text,
           created_at,
-          profiles:user_id (full_name, email)
+          profiles:user_id (full_name)
         `)
         .order('created_at', { ascending: false })
         .limit(50),
@@ -84,7 +102,7 @@ serve(async (req) => {
       comments: comments.map(c => ({
         texto: c.comment_text,
         data: c.created_at,
-        usuario: c.profiles?.full_name || 'Usuário desconhecido'
+        usuario: c.profiles?.full_name || 'Usuário'
       })),
       totalPhotos: photos.length,
       photos: photos.map(p => ({
