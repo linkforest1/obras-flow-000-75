@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -64,24 +65,22 @@ export function AIChatbot() {
     setIsTyping(true);
 
     try {
-      // Enviar mensagem para o webhook
-      const response = await fetch('https://eok5xffm9m478gg.m.pipedream.net', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: messageText,
-          timestamp: new Date().toISOString(),
-          userId: Date.now().toString()
-        })
+      // Enviar mensagem para a edge function com Gemini AI
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: { 
+          messages: [
+            { role: 'user', content: messageText }
+          ]
+        }
       });
 
-      let aiResponseText = 'Obrigado pela sua mensagem! Sua solicitação foi processada.';
+      if (error) throw error;
+
+      let aiResponseText = data?.response || 'Desculpe, não consegui processar sua mensagem.';
       
-      if (response.ok) {
-        const data = await response.json();
-        aiResponseText = data.response || aiResponseText;
+      // Verificar se há erro de rate limit ou créditos
+      if (data?.error) {
+        aiResponseText = data.error;
       }
 
       const aiResponse: Message = {
