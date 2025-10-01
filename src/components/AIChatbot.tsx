@@ -27,7 +27,7 @@ export function AIChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Olá! Sou seu assistente de IA. Como posso ajudá-lo hoje?',
+      text: 'Olá! Sou seu assistente de IA integrado com Gemini. Posso responder sobre atividades, comentários, fotos e relatórios do projeto. Como posso ajudá-lo?',
       isUser: false,
       timestamp: new Date()
     }
@@ -66,6 +66,8 @@ export function AIChatbot() {
 
     try {
       // Enviar mensagem para a edge function com Gemini AI
+      console.log('Enviando mensagem para AI...');
+      
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: { 
           messages: [
@@ -74,7 +76,12 @@ export function AIChatbot() {
         }
       });
 
-      if (error) throw error;
+      console.log('Resposta recebida:', { data, error });
+
+      if (error) {
+        console.error('Erro da função:', error);
+        throw error;
+      }
 
       let aiResponseText = data?.response || 'Desculpe, não consegui processar sua mensagem.';
       
@@ -93,9 +100,21 @@ export function AIChatbot() {
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+      
+      // Mensagem mais específica para ajudar no debug
+      let errorMessage = 'Desculpe, ocorreu um erro ao processar sua mensagem.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'A função de IA ainda está sendo configurada. Por favor, aguarde alguns instantes e tente novamente.';
+        } else {
+          errorMessage = `Erro: ${error.message}`;
+        }
+      }
+      
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',
+        text: errorMessage,
         isUser: false,
         timestamp: new Date()
       };
