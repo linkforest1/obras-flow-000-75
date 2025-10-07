@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, MapPin, User, Download, ChevronLeft, ChevronRight, MessageCircle, Clock, CheckCircle2, XCircle, Share } from "lucide-react";
+import { Calendar, MapPin, User, Download, ChevronLeft, ChevronRight, MessageCircle, Clock, CheckCircle2, XCircle, Share, History, TrendingUp } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivityInteractions } from '@/hooks/useActivityInteractions';
@@ -23,6 +23,37 @@ export function ViewActivityPhotosModal({
   onClose
 }: ViewActivityPhotosModalProps) {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+  const [progressHistory, setProgressHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    if (open && activityId) {
+      fetchProgressHistory();
+    }
+  }, [open, activityId]);
+
+  const fetchProgressHistory = async () => {
+    if (!activityId) return;
+    
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('activity_progress_history')
+        .select(`
+          *,
+          profiles:changed_by (full_name)
+        `)
+        .eq('activity_id', activityId)
+        .order('changed_at', { ascending: false });
+
+      if (error) throw error;
+      setProgressHistory(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar histórico de progresso:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   // Fetch activity details with photos and comments
   const {
@@ -320,16 +351,65 @@ export function ViewActivityPhotosModal({
                 </div>
 
                 {/* Progresso */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">Progresso</span>
-                    <span className="text-sm text-vale-blue">{activityDetails?.activity?.progress || 0}%</span>
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <TrendingUp className="w-5 h-5 text-vale-blue" />
+                    <span className="text-sm font-medium text-muted-foreground">Progresso</span>
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-vale-blue h-2 rounded-full transition-all duration-300" style={{
-                  width: `${activityDetails?.activity?.progress || 0}%`
-                }}></div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 bg-muted rounded-full h-3">
+                      <div 
+                        className="bg-vale-blue h-3 rounded-full transition-all duration-300" 
+                        style={{ width: `${activityDetails?.activity?.progress || 0}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xl font-bold text-vale-blue min-w-[60px]">
+                      {activityDetails?.activity?.progress || 0}%
+                    </span>
                   </div>
+                </div>
+
+                {/* Histórico de Progresso */}
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <History className="w-5 h-5 text-vale-blue" />
+                    <span className="text-sm font-medium text-muted-foreground">Histórico de Progresso</span>
+                  </div>
+                  
+                  {loadingHistory ? (
+                    <p className="text-sm text-muted-foreground">Carregando histórico...</p>
+                  ) : progressHistory.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhuma alteração de progresso registrada</p>
+                  ) : (
+                    <ScrollArea className="h-[200px] pr-4">
+                      <div className="space-y-3">
+                        {progressHistory.map((record) => (
+                          <div key={record.id} className="border-l-2 border-vale-blue pl-4 pb-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-foreground">
+                                  {record.old_progress !== null ? `${record.old_progress}%` : '0%'}
+                                </span>
+                                <span className="text-muted-foreground">→</span>
+                                <span className="text-sm font-bold text-vale-blue">
+                                  {record.new_progress}%
+                                </span>
+                              </div>
+                              <Badge variant="outline" className="text-xs">
+                                {record.new_progress > (record.old_progress || 0) ? '+' : ''}
+                                {record.new_progress - (record.old_progress || 0)}%
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              <span>{record.profiles?.full_name || 'Usuário'}</span>
+                              {' • '}
+                              <span>{formatDate(record.changed_at)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
                 </div>
 
                 {/* Comentários */}
