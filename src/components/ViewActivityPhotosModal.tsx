@@ -106,6 +106,7 @@ export function ViewActivityPhotosModal({
     const success = await completeActivity(activityId);
     if (success) {
       refetch();
+      fetchProgressHistory();
     }
     setIsCompleting(false);
   };
@@ -114,6 +115,7 @@ export function ViewActivityPhotosModal({
     const success = await completeWithDelay(activityId);
     if (success) {
       refetch();
+      fetchProgressHistory();
     }
     setIsCompletingWithDelay(false);
   };
@@ -122,6 +124,7 @@ export function ViewActivityPhotosModal({
     const success = await uncompleteActivity(activityId);
     if (success) {
       refetch();
+      fetchProgressHistory();
     }
     setIsUncompleting(false);
   };
