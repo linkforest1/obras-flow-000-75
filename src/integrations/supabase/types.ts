@@ -210,6 +210,44 @@ export type Database = {
           },
         ]
       }
+      activity_progress_history: {
+        Row: {
+          activity_id: string
+          changed_at: string
+          changed_by: string
+          id: string
+          new_progress: number
+          old_progress: number | null
+          pacote: string
+        }
+        Insert: {
+          activity_id: string
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_progress: number
+          old_progress?: number | null
+          pacote?: string
+        }
+        Update: {
+          activity_id?: string
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_progress?: number
+          old_progress?: number | null
+          pacote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_progress_history_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_subtasks: {
         Row: {
           activity_id: string

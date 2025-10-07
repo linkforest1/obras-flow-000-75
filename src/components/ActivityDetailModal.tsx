@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,11 +8,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Camera, MessageSquare, Calendar, MapPin, User, IdCard, Building, Wrench, Package, Clock, TrendingUp } from "lucide-react";
+import { Camera, MessageSquare, Calendar, MapPin, User, IdCard, Building, Wrench, Package, Clock, TrendingUp, History } from "lucide-react";
 import { AddPhotoModal } from "@/components/AddPhotoModal";
 import { CommentModal } from "@/components/CommentModal";
 import { format, parseISO } from 'date-fns';
 import { statusConfig, priorityConfig } from "@/config/activity";
+import { supabase } from "@/integrations/supabase/client";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ActivityDetailModalProps {
   open: boolean;
@@ -23,6 +25,37 @@ interface ActivityDetailModalProps {
 export function ActivityDetailModal({ open, onClose, activity }: ActivityDetailModalProps) {
   const [showAddPhotoModal, setShowAddPhotoModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
+  const [progressHistory, setProgressHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    if (open && activity?.id) {
+      fetchProgressHistory();
+    }
+  }, [open, activity?.id]);
+
+  const fetchProgressHistory = async () => {
+    if (!activity?.id) return;
+    
+    setLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('activity_progress_history')
+        .select(`
+          *,
+          profiles:changed_by (full_name)
+        `)
+        .eq('activity_id', activity.id)
+        .order('changed_at', { ascending: false });
+
+      if (error) throw error;
+      setProgressHistory(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar histórico de progresso:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   if (!activity) return null;
 
@@ -117,6 +150,49 @@ export function ActivityDetailModal({ open, onClose, activity }: ActivityDetailM
                 {activity.progress || 0}%
               </span>
             </div>
+          </div>
+
+          {/* Histórico de Progresso */}
+          <div className="bg-card rounded-lg border p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <History className="w-5 h-5 text-vale-blue" />
+              <span className="text-sm font-medium text-muted-foreground">Histórico de Progresso</span>
+            </div>
+            
+            {loadingHistory ? (
+              <p className="text-sm text-muted-foreground">Carregando histórico...</p>
+            ) : progressHistory.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma alteração de progresso registrada</p>
+            ) : (
+              <ScrollArea className="h-[200px] pr-4">
+                <div className="space-y-3">
+                  {progressHistory.map((record) => (
+                    <div key={record.id} className="border-l-2 border-vale-blue pl-4 pb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">
+                            {record.old_progress !== null ? `${record.old_progress}%` : '0%'}
+                          </span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-sm font-bold text-vale-blue">
+                            {record.new_progress}%
+                          </span>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {record.new_progress > (record.old_progress || 0) ? '+' : ''}
+                          {record.new_progress - (record.old_progress || 0)}%
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        <span>{record.profiles?.full_name || 'Usuário'}</span>
+                        {' • '}
+                        <span>{formatDateTime(record.changed_at)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </div>
 
           {/* Grid de Informações Secundárias */}
