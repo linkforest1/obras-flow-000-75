@@ -152,6 +152,16 @@ async function handleUpload(req: Request, supabaseClient: any, user: any) {
   console.log('🔍 INICIANDO PROCESSAMENTO DO UPLOAD...')
   
   try {
+    // Buscar o pacote do usuário
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('pacote')
+      .eq('id', user.id)
+      .single()
+    
+    const userPacote = profile?.pacote || 'Pacote 1'
+    console.log('Pacote do usuário:', userPacote)
+    
     console.log('1. Extraindo arquivo do FormData...')
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -293,7 +303,8 @@ async function handleUpload(req: Request, supabaseClient: any, user: any) {
           priority: normalizePriority(getCellValue(row, headerMap.prioridade)),
           project_id: '00000000-0000-0000-0000-000000000001', // Projeto padrão
           status: 'pending',
-          progress: 0
+          progress: 0,
+          pacote: userPacote
         }
 
         console.log(`Dados mapeados para linha ${i}:`, activityData)
@@ -353,7 +364,8 @@ async function handleUpload(req: Request, supabaseClient: any, user: any) {
           priority: normalizePriority(values[headerMap.prioridade]),
           project_id: '00000000-0000-0000-0000-000000000001',
           status: 'pending',
-          progress: 0
+          progress: 0,
+          pacote: userPacote
         }
 
         if (activityData.title) {
