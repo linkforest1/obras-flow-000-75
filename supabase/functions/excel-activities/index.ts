@@ -80,24 +80,24 @@ async function handleDownloadTemplate() {
     const modelHeaders = [
       "ID da Atividade", "Titulo", "Descricao", "Disciplina", "Nome do Encarregado",
       "Ativo", "Semana", "Localizacao", "Data de Inicio",
-      "Data de Termino", "Prioridade"
+      "Data de Termino", "Prioridade", "Pacote"
     ];
 
     const exampleData = [
       [
         "ACT-001", "Inspecao semanal do transportador TC-01", "Realizar inspecao visual e lubrificacao dos roletes.",
         "Mecanica", "Carlos Souza", "TC-01", "Semana 25",
-        "Area da Britagem", "2025-06-16", "2025-06-16", "high"
+        "Area da Britagem", "2025-06-16", "2025-06-16", "high", "Pacote 1"
       ],
       [
         "ACT-002", "Troca de lampadas do galpao G-03", "Substituir todas as lampadas queimadas por LED.",
         "Eletrica", "Ana Pereira", "GALPAO-G03", "Semana 25",
-        "Area de Manutencao", "2025-06-17", "2025-06-18", "medium"
+        "Area de Manutencao", "2025-06-17", "2025-06-18", "medium", "Pacote 1"
       ],
       [
         "ACT-003", "Pintura de corrimao da escada E-05", "Lixar, aplicar fundo e pintar o corrimao.",
         "Pintura", "Mariana Costa", "ESCADA-E05", "Semana 26",
-        "Predio Administrativo", "2025-06-23", "2025-06-25", "low"
+        "Predio Administrativo", "2025-06-23", "2025-06-25", "low", "Pacote 2"
       ]
     ];
 
@@ -119,6 +119,7 @@ async function handleDownloadTemplate() {
       ["Data de Inicio", "Data de inicio da atividade no formato AAAA-MM-DD (Obrigatorio)", "2025-06-16"],
       ["Data de Termino", "Data de termino da atividade no formato AAAA-MM-DD (Obrigatorio)", "2025-06-16"],
       ["Prioridade", "Nivel de prioridade da tarefa (Obrigatorio)", "Valores aceitos: low, medium, high"],
+      ["Pacote", "Pacote ao qual a atividade pertence (Obrigatorio)", "Pacote 1, Pacote 2, Pacote 3"],
     ];
 
     const instructionsWorksheetData = [instructionsHeaders, ...instructionsData];

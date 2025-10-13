@@ -67,7 +67,9 @@ export function ActivityDetailModal({ open, onClose, activity }: ActivityDetailM
 
   const formatDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), 'dd/MM/yyyy');
+      // Para datas sem hora, usar split para evitar conversão de timezone
+      const [year, month, day] = dateString.split('-');
+      return `${day}/${month}/${year}`;
     } catch {
       return dateString;
     }
