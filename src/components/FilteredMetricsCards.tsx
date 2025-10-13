@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Clock, AlertTriangle, BarChart3, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, BarChart3, XCircle, TrendingUp } from "lucide-react";
 import { useActivities } from "@/hooks/useActivities";
 import { useFilters } from "@/contexts/FilterContext";
 
@@ -19,8 +19,8 @@ export function FilteredMetricsCards({
 
   if (!activities) {
     return (
-      <div className="grid gap-4 md:grid-cols-5">
-        {[1, 2, 3, 4, 5].map(i => (
+      <div className="grid gap-4 md:grid-cols-6">
+        {[1, 2, 3, 4, 5, 6].map(i => (
           <Card key={i}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Carregando...</CardTitle>
@@ -80,6 +80,11 @@ export function FilteredMetricsCards({
 
   const completionRate = totalActivities > 0 ? Math.round((completedCount / totalActivities) * 100) : 0;
   const weekLabel = selectedWeek && selectedWeek !== 'all' ? `Semana ${selectedWeek}` : 'Filtros aplicados';
+  
+  // Calcular média de progresso da semana
+  const averageProgress = totalActivities > 0 
+    ? Math.round(filteredActivities.reduce((sum, activity) => sum + (activity.progress || 0), 0) / totalActivities) 
+    : 0;
 
   const metrics = [
     {
@@ -121,11 +126,19 @@ export function FilteredMetricsCards({
       icon: Clock,
       color: "text-blue-600",
       bgColor: "bg-blue-100 dark:bg-blue-950"
+    },
+    {
+      title: "Progresso Médio",
+      value: `${averageProgress}%`,
+      description: `média da semana`,
+      icon: TrendingUp,
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-100 dark:bg-cyan-950"
     }
   ];
 
   return (
-    <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-6">
       {metrics.map((metric, index) => (
         <Card key={index}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
