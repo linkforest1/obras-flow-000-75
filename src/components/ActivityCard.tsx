@@ -22,7 +22,6 @@ import { downloadActivityImages } from "@/utils/downloadUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { statusConfig, priorityConfig } from "@/config/activity";
-
 interface ActivityCardProps {
   id: string;
   title: string;
@@ -42,7 +41,6 @@ interface ActivityCardProps {
   week?: number;
   customId?: string;
 }
-
 interface Subtask {
   id: string;
   text: string;
@@ -57,7 +55,6 @@ const getStatusConfig = (status: string) => {
     color: "bg-gray-500"
   };
 };
-
 const getPriorityConfig = (priority: string) => {
   return priorityConfig[priority as keyof typeof priorityConfig] || {
     label: "Não definida",
@@ -65,7 +62,6 @@ const getPriorityConfig = (priority: string) => {
     color: "bg-gray-500"
   };
 };
-
 export function ActivityCard({
   id,
   title,
@@ -89,7 +85,9 @@ export function ActivityCard({
     toast
   } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [currentProgress, setCurrentProgress] = useState(progress);
   const [showProgressEditor, setShowProgressEditor] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -103,7 +101,6 @@ export function ActivityCard({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  
   const {
     completeActivity,
     updateProgress,
@@ -129,9 +126,12 @@ export function ActivityCard({
     refetch: refetchPhotos
   } = useActivityPhotos(id);
   const actualPhotosCount = activityPhotos?.length || 0;
-  
+
   // Buscar desvios da atividade
-  const { hasDeviations, deviationCount } = useHasActivityDeviations(id);
+  const {
+    hasDeviations,
+    deviationCount
+  } = useHasActivityDeviations(id);
   const formattedStartDate = startDate ? new Date(startDate + 'T00:00:00').toLocaleDateString('pt-BR') : '';
   const formattedEndDate = endDate ? new Date(endDate + 'T00:00:00').toLocaleDateString('pt-BR') : '';
 
@@ -143,13 +143,11 @@ export function ActivityCard({
   // Get configurations with safe fallbacks
   const currentStatusConfig = getStatusConfig(status);
   const currentPriorityConfig = getPriorityConfig(priority);
-
   const calculateProgressFromSubtasks = () => {
     if (subtasks.length === 0) return currentProgress;
     const completedTasks = subtasks.filter(task => task.completed).length;
     return Math.round(completedTasks / subtasks.length * 100);
   };
-
   const handleSubtaskToggle = (subtaskId: string) => {
     setSubtasks(prev => {
       const updated = prev.map(task => task.id === subtaskId ? {
@@ -162,7 +160,6 @@ export function ActivityCard({
       return updated;
     });
   };
-
   const addSubtask = () => {
     if (newSubtask.trim()) {
       const newTask: Subtask = {
@@ -174,7 +171,6 @@ export function ActivityCard({
       setNewSubtask("");
     }
   };
-
   const removeSubtask = (subtaskId: string) => {
     setSubtasks(prev => {
       const updated = prev.filter(task => task.id !== subtaskId);
@@ -184,7 +180,6 @@ export function ActivityCard({
       return updated;
     });
   };
-
   const handleCompleteTask = async () => {
     const success = await completeActivity(id);
     if (success) {
@@ -192,7 +187,6 @@ export function ActivityCard({
       refetchActivities();
     }
   };
-
   const handleCompleteWithDelay = async () => {
     const success = await completeWithDelay(id);
     if (success) {
@@ -200,7 +194,6 @@ export function ActivityCard({
       refetchActivities();
     }
   };
-
   const handleUncompleteTask = async () => {
     setIsUncompleting(true);
     const success = await uncompleteActivity(id);
@@ -210,7 +203,6 @@ export function ActivityCard({
       setIsUncompleting(false);
     }
   };
-
   const handleDeleteActivity = async () => {
     setIsDeleting(true);
     try {
@@ -225,11 +217,9 @@ export function ActivityCard({
       });
     }
   };
-
   const handleAddImage = () => {
     setShowPhotoModal(true);
   };
-
   const handlePhotoModalClose = () => {
     setShowPhotoModal(false);
     // Invalidar cache e refetch para atualizar contadores
@@ -239,18 +229,15 @@ export function ActivityCard({
     refetchPhotos();
     refetchActivities();
   };
-
   const handleAddComment = () => {
     setShowCommentModal(true);
   };
-
   const handleEditComment = (commentId: string) => {
     console.log('handleEditComment called with commentId:', commentId);
     setEditingCommentId(commentId);
     setShowCommentModal(true);
     console.log('editingCommentId set to:', commentId);
   };
-
   const handleCommentModalClose = () => {
     setShowCommentModal(false);
     setEditingCommentId(null);
@@ -263,11 +250,9 @@ export function ActivityCard({
     });
     refetchActivities();
   };
-
   const handleProgressChange = (value: number[]) => {
     setCurrentProgress(value[0]);
   };
-
   const handleProgressSave = async () => {
     const success = await updateProgress(id, currentProgress);
     if (success) {
@@ -279,7 +264,6 @@ export function ActivityCard({
       refetchActivities();
     }
   };
-
   const handleEmployeeCountSave = (newEmployeeCount: Record<string, number>) => {
     console.log('Saving employee count for activity:', id, newEmployeeCount);
     toast({
@@ -287,7 +271,6 @@ export function ActivityCard({
       description: "O efetivo de funcionários foi salvo com sucesso."
     });
   };
-
   const handleCardClick = (e: React.MouseEvent) => {
     // Prevent flip if clicking on interactive elements
     const target = e.target as HTMLElement;
@@ -296,7 +279,6 @@ export function ActivityCard({
     }
     setIsFlipped(!isFlipped);
   };
-
   const handleDownloadImage = async () => {
     if (isDownloading) return; // Prevent multiple simultaneous downloads
 
@@ -333,7 +315,6 @@ export function ActivityCard({
 
   // Determine if download button should be disabled
   const isDownloadDisabled = isDownloading || isLoadingPhotos || actualPhotosCount === 0;
-
   return <TooltipProvider>
       <div className="relative w-full h-fit perspective-1000">
         <div className={cn("relative w-full h-full transition-transform duration-700 transform-style-preserve-3d cursor-pointer", isFlipped && "rotate-y-180")} onClick={handleCardClick}>
@@ -344,9 +325,7 @@ export function ActivityCard({
               <div className="absolute top-3 right-3 z-10">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50" disabled={isDeleting || status === 'not-completed'} onClick={e => e.stopPropagation()}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -385,9 +364,9 @@ export function ActivityCard({
                        {['pending', 'in-progress', 'completed', 'delayed'].includes(status) && <Tooltip>
                            <TooltipTrigger asChild>
                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={e => {
-                           e.stopPropagation();
-                           setShowProgressEditor(!showProgressEditor);
-                         }} disabled={status === 'not-completed'}>
+                          e.stopPropagation();
+                          setShowProgressEditor(!showProgressEditor);
+                        }} disabled={status === 'not-completed'}>
                                <Settings className="w-3 h-3" />
                              </Button>
                            </TooltipTrigger>
@@ -407,8 +386,7 @@ export function ActivityCard({
                    </p>
 
                    {/* Alerta de Desvio */}
-                   {hasDeviations && (
-                     <Tooltip>
+                   {hasDeviations && <Tooltip>
                        <TooltipTrigger asChild>
                          <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full text-red-600 text-xs font-medium w-fit">
                            <AlertTriangle className="w-3 h-3" />
@@ -418,8 +396,7 @@ export function ActivityCard({
                        <TooltipContent>
                          <p>Esta atividade possui {deviationCount} desvio{deviationCount > 1 ? 's' : ''} reportado{deviationCount > 1 ? 's' : ''}</p>
                        </TooltipContent>
-                     </Tooltip>
-                   )}
+                     </Tooltip>}
                   
                   {/* Manual Progress Editor */}
                   {showProgressEditor && <div className="space-y-3 pt-2 border-t" onClick={e => e.stopPropagation()}>
@@ -705,17 +682,12 @@ export function ActivityCard({
                             {/* Edit Comment Button */}
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="absolute top-2 right-2 h-7 w-7 p-0 opacity-80 hover:opacity-100 hover:bg-muted/50"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    console.log('Edit button clicked, lastComment.id:', lastComment.id);
-                                    console.log('Debug - user?.id:', user?.id, 'lastComment.user_id:', lastComment.user_id, 'can edit:', user?.id === lastComment.user_id);
-                                    handleEditComment(lastComment.id);
-                                  }}
-                                >
+                                <Button variant="ghost" size="sm" className="absolute top-2 right-2 h-7 w-7 p-0 opacity-80 hover:opacity-100 hover:bg-muted/50" onClick={e => {
+                              e.stopPropagation();
+                              console.log('Edit button clicked, lastComment.id:', lastComment.id);
+                              console.log('Debug - user?.id:', user?.id, 'lastComment.user_id:', lastComment.user_id, 'can edit:', user?.id === lastComment.user_id);
+                              handleEditComment(lastComment.id);
+                            }}>
                                   <Edit className="w-3 h-3 text-vale-blue" />
                                 </Button>
                               </TooltipTrigger>
@@ -759,13 +731,7 @@ export function ActivityCard({
       {/* Modals */}
       <PhotoUploadModal open={showPhotoModal} onClose={handlePhotoModalClose} activityId={id} activityTitle={title} />
 
-      <CommentModal 
-        open={showCommentModal} 
-        onClose={handleCommentModalClose} 
-        activityId={id} 
-        activityTitle={title}
-        editingCommentId={editingCommentId}
-      />
+      <CommentModal open={showCommentModal} onClose={handleCommentModalClose} activityId={id} activityTitle={title} editingCommentId={editingCommentId} />
 
       <EmployeeCountModal open={showEmployeeModal} onClose={() => setShowEmployeeModal(false)} title={title} initialEmployeeCount={employeeCount} onSave={handleEmployeeCountSave} />
     </TooltipProvider>;
