@@ -157,13 +157,15 @@ export function ViewActivityPhotosModal({
     if (activityDetails?.activity?.start_date || activityDetails?.activity?.end_date) {
       message += `📆 *Período:* `;
       if (activityDetails.activity.start_date) {
-        message += new Date(activityDetails.activity.start_date).toLocaleDateString('pt-BR');
+        const [year, month, day] = activityDetails.activity.start_date.split('-');
+        message += `${day}/${month}/${year}`;
       }
       if (activityDetails.activity.start_date && activityDetails.activity.end_date) {
         message += ' - ';
       }
       if (activityDetails.activity.end_date) {
-        message += new Date(activityDetails.activity.end_date).toLocaleDateString('pt-BR');
+        const [year, month, day] = activityDetails.activity.end_date.split('-');
+        message += `${day}/${month}/${year}`;
       }
       message += '\n';
     }
@@ -346,9 +348,15 @@ export function ViewActivityPhotosModal({
                   {(activityDetails?.activity?.start_date || activityDetails?.activity?.end_date) && <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="w-4 h-4 flex-shrink-0" />
                       <span className="break-words">
-                        {activityDetails.activity.start_date && new Date(activityDetails.activity.start_date).toLocaleDateString('pt-BR')}
+                        {activityDetails.activity.start_date && (() => {
+                          const [year, month, day] = activityDetails.activity.start_date.split('-');
+                          return `${day}/${month}/${year}`;
+                        })()}
                         {activityDetails.activity.start_date && activityDetails.activity.end_date && ' - '}
-                        {activityDetails.activity.end_date && new Date(activityDetails.activity.end_date).toLocaleDateString('pt-BR')}
+                        {activityDetails.activity.end_date && (() => {
+                          const [year, month, day] = activityDetails.activity.end_date.split('-');
+                          return `${day}/${month}/${year}`;
+                        })()}
                       </span>
                     </div>}
                 </div>
