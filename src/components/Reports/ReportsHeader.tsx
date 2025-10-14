@@ -3,20 +3,24 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { BarChart3, Download, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { WeekFilter } from "@/components/WeekFilter";
-import { DisciplineFilter } from "@/components/DisciplineFilter";
+import { MultiSelectFilter } from "@/components/MultiSelectFilter";
+import { useWeekFilter } from "@/hooks/useWeekFilter";
+import { useDisciplineFilter } from "@/hooks/useDisciplineFilter";
 
 interface ReportsHeaderProps {
-  selectedWeek: string;
-  selectedDiscipline: string;
-  onWeekChange: (week: string) => void;
-  onDisciplineChange: (discipline: string) => void;
+  selectedWeek: string[];
+  selectedDiscipline: string[];
+  onWeekChange: (weeks: string[]) => void;
+  onDisciplineChange: (disciplines: string[]) => void;
   onExportPDF: () => void;
   onSignOut: () => void;
   isExporting: boolean;
 }
 
 export function ReportsHeader({ selectedWeek, selectedDiscipline, onWeekChange, onDisciplineChange, onExportPDF, onSignOut, isExporting }: ReportsHeaderProps) {
+  const { availableWeeks } = useWeekFilter();
+  const { availableDisciplines } = useDisciplineFilter();
+
   return (
     <header className="bg-card border-b border-border p-3 md:p-4">
       <div className="flex items-center justify-between gap-2">
@@ -38,8 +42,24 @@ export function ReportsHeader({ selectedWeek, selectedDiscipline, onWeekChange, 
           <div className="md:hidden">
             <ThemeToggle />
           </div>
-          <WeekFilter selectedWeek={selectedWeek} onWeekChange={onWeekChange} />
-          <DisciplineFilter selectedDiscipline={selectedDiscipline} onDisciplineChange={onDisciplineChange} />
+          <div className="hidden md:block">
+            <MultiSelectFilter 
+              label="Semanas"
+              options={availableWeeks}
+              selectedValues={selectedWeek}
+              onSelectionChange={onWeekChange}
+              placeholder="Todas as Semanas"
+            />
+          </div>
+          <div className="hidden md:block">
+            <MultiSelectFilter 
+              label="Disciplinas"
+              options={availableDisciplines}
+              selectedValues={selectedDiscipline}
+              onSelectionChange={onDisciplineChange}
+              placeholder="Todas as Disciplinas"
+            />
+          </div>
           <Button 
             onClick={onExportPDF} 
             disabled={isExporting}
