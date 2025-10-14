@@ -27,8 +27,8 @@ export default function Reports() {
   const { toast } = useToast();
   const reportRef = useRef<HTMLDivElement>(null);
   const { exportToPDF, isExporting } = usePDFExport();
-  const [selectedWeek, setSelectedWeek] = useState<string[]>([]);
-  const [selectedDiscipline, setSelectedDiscipline] = useState<string[]>([]);
+  const [selectedWeek, setSelectedWeek] = useState<string>('all');
+  const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const { activities } = useActivities();
   const { reports } = useDailyReports();
@@ -58,16 +58,12 @@ export default function Reports() {
     // Filtrar atividades baseado na semana e disciplina selecionadas
     let filteredActivities = activities || [];
     
-    if (selectedWeek.length > 0) {
-      filteredActivities = filteredActivities.filter(activity => 
-        selectedWeek.includes(String(activity.week))
-      );
+    if (selectedWeek !== 'all') {
+      filteredActivities = filteredActivities.filter(activity => String(activity.week) === selectedWeek);
     }
     
-    if (selectedDiscipline.length > 0) {
-      filteredActivities = filteredActivities.filter(activity => 
-        selectedDiscipline.includes(activity.discipline)
-      );
+    if (selectedDiscipline !== 'all') {
+      filteredActivities = filteredActivities.filter(activity => activity.discipline === selectedDiscipline);
     }
 
     // Filtrar desvios baseado na semana selecionada (se necessário)
@@ -80,8 +76,8 @@ export default function Reports() {
     };
 
     const reportSuffix = [];
-    if (selectedWeek.length > 0) reportSuffix.push(`semanas-${selectedWeek.join('-')}`);
-    if (selectedDiscipline.length > 0) reportSuffix.push(`disciplinas-${selectedDiscipline.join('-').replace(/\s+/g, '-').toLowerCase()}`);
+    if (selectedWeek !== 'all') reportSuffix.push(`semana-${selectedWeek}`);
+    if (selectedDiscipline !== 'all') reportSuffix.push(`disciplina-${selectedDiscipline.replace(/\s+/g, '-').toLowerCase()}`);
     
     const reportName = reportSuffix.length > 0 
       ? `relatorio-gerencial-${reportSuffix.join('-')}`
@@ -90,7 +86,7 @@ export default function Reports() {
     await exportToPDF(
       null, 
       reportName, 
-      selectedWeek.join(','), 
+      selectedWeek, 
       filteredActivities, 
       rdoData
     );
@@ -103,16 +99,12 @@ export default function Reports() {
     // Filtrar atividades por semana e disciplina se necessário
     let filteredActivities = activities;
     
-    if (selectedWeek.length > 0) {
-      filteredActivities = filteredActivities.filter(activity => 
-        selectedWeek.includes(String(activity.week))
-      );
+    if (selectedWeek !== 'all') {
+      filteredActivities = filteredActivities.filter(activity => String(activity.week) === selectedWeek);
     }
     
-    if (selectedDiscipline.length > 0) {
-      filteredActivities = filteredActivities.filter(activity => 
-        selectedDiscipline.includes(activity.discipline)
-      );
+    if (selectedDiscipline !== 'all') {
+      filteredActivities = filteredActivities.filter(activity => activity.discipline === selectedDiscipline);
     }
 
     const delayedByDiscipline = filteredActivities.filter(a => a.status === 'delayed').reduce((acc: any, activity) => {
