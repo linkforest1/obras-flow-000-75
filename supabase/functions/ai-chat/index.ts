@@ -45,48 +45,21 @@ serve(async (req) => {
     // Buscar dados relevantes do Supabase
     console.log('Buscando dados do Supabase...');
     
-    const [activitiesResult, commentsResult, photosResult, reportsResult] = await Promise.all([
-      supabase
-        .from('activities')
-        .select('id, title, description, responsible_name, discipline, status, progress, start_date, end_date, location, asset')
-        .order('created_at', { ascending: false })
-        .limit(50),
-      
-      supabase
-        .from('activity_comments')
-        .select(`
-          id,
-          comment_text,
-          created_at,
-          profiles:user_id (full_name)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50),
-      
-      supabase
-        .from('activity_photos')
-        .select('id, activity_id, caption, created_at')
-        .order('created_at', { ascending: false })
-        .limit(50),
-      
-      supabase
-        .from('daily_reports')
-        .select('id, report_date, description, weather, employee_count')
-        .order('report_date', { ascending: false })
-        .limit(30)
-    ]);
+    const activitiesResult = await supabase
+      .from('activities')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     // Construir contexto com os dados
     const activities = activitiesResult.data || [];
-    const comments = commentsResult.data || [];
-    const photos = photosResult.data || [];
-    const reports = reportsResult.data || [];
 
-    console.log(`Dados carregados: ${activities.length} atividades, ${comments.length} comentários, ${photos.length} fotos, ${reports.length} relatórios`);
+    console.log(`Dados carregados: ${activities.length} atividades`);
 
     const contextData = {
       totalActivities: activities.length,
       activities: activities.map(a => ({
+        id: a.id,
         titulo: a.title,
         descricao: a.description,
         responsavel: a.responsible_name,
@@ -96,45 +69,39 @@ serve(async (req) => {
         inicio: a.start_date,
         fim: a.end_date,
         local: a.location,
-        ativo: a.asset
-      })),
-      totalComments: comments.length,
-      comments: comments.map(c => ({
-        texto: c.comment_text,
-        data: c.created_at,
-        usuario: c.profiles?.full_name || 'Usuário'
-      })),
-      totalPhotos: photos.length,
-      photos: photos.map(p => ({
-        legenda: p.caption,
-        data: p.created_at
-      })),
-      totalReports: reports.length,
-      reports: reports.map(r => ({
-        data: r.report_date,
-        descricao: r.description,
-        clima: r.weather,
-        funcionarios: r.employee_count
+        ativo: a.asset,
+        pacote: a.pacote,
+        prioridade: a.priority,
+        semana: a.week,
+        custom_id: a.custom_id,
+        employee_count: a.employee_count
       }))
     };
 
-    const systemPrompt = `Você é um assistente de IA especializado em gestão de projetos e construção civil. 
-Você tem acesso ao banco de dados do sistema e pode responder perguntas sobre:
-- Atividades do projeto (tarefas, responsáveis, status, progresso)
-- Comentários nas atividades
-- Fotos das atividades
-- Relatórios diários (RDO)
+    const systemPrompt = `Você é um assistente de IA especializado em gestão de projetos e construção civil da Vale. 
+Você tem acesso às atividades do projeto e pode responder perguntas sobre:
+- Status das atividades (Não Iniciado, Em Andamento, Concluído, Atrasado, Não Concluída)
+- Progresso das atividades (0-100%)
+- Responsáveis pelas atividades
+- Disciplinas (Civil, Mecânica, Elétrica, Instrumentação, etc.)
+- Datas de início e fim das atividades
+- Locais e ativos onde as atividades são realizadas
+- Prioridades (Baixa, Média, Alta)
+- Pacotes de trabalho
+- Contagem de funcionários por atividade
 
-Contexto atual do banco de dados:
+Contexto atual das atividades:
 ${JSON.stringify(contextData, null, 2)}
 
 Instruções:
 - Responda de forma clara e objetiva em português brasileiro
 - Use os dados fornecidos acima para responder com precisão
-- Se perguntarem sobre números específicos, use os dados do contexto
-- Se não souber algo, seja honesto
-- Mantenha um tom profissional mas amigável
-- Forneça insights úteis quando apropriado`;
+- Para perguntas sobre status, use: Não Iniciado, Em Andamento, Concluído, Atrasado, Não Concluída
+- Para perguntas sobre disciplinas, mencione as disciplinas relevantes
+- Se perguntarem sobre números específicos (quantidade de atividades, progresso médio, etc.), calcule usando os dados
+- Forneça insights úteis como atividades atrasadas, progresso geral, atividades por responsável, etc.
+- Se não souber algo que não está nos dados, seja honesto
+- Mantenha um tom profissional mas amigável`;
 
     // Fazer chamada para o Lovable AI Gateway
     console.log('Chamando Gemini AI...');
