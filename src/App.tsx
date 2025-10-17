@@ -18,6 +18,7 @@ import { Toaster } from "@/components/ui/toaster"
 import ResetPassword from './pages/ResetPassword';
 import Treinamentos from './pages/Treinamentos';
 import QualidadeBrafer from './pages/QualidadeBrafer';
+import VisaoGeral from './pages/VisaoGeral';
 import { AIChatbot } from './components/AIChatbot';
 
 function App() {
@@ -102,6 +103,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <QualidadeBrafer />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/visao-geral"
+                  element={
+                    <ProtectedRoute>
+                      <VisaoGeral />
                     </ProtectedRoute>
                   }
                 />
