@@ -21,7 +21,6 @@ import { ReportsHeader } from "@/components/Reports/ReportsHeader";
 import { DeviationAnalysis } from "@/components/PDFReportLayout/DeviationAnalysis";
 import { FilterProvider, useFilters } from "@/contexts/FilterContext";
 import { FilterSheet } from "@/components/FilterSheet";
-import { PackageOverview } from "@/components/PackageOverview";
 
 export default function Reports() {
   const { user, signOut } = useAuth();
@@ -230,7 +229,39 @@ function ReportsContent({ selectedWeek, selectedDiscipline, setSelectedWeek, set
                 </div>
 
                 <TabsContent value="overview" className="space-y-6">
-                  <PackageOverview />
+                  <FilteredMetricsCards selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
+                  
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-vale-blue" />
+                          Progresso das Atividades
+                        </CardTitle>
+                        <CardDescription>
+                          Distribuição do status das atividades filtradas
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <FilteredActivityProgressChart selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Users className="w-5 h-5 text-vale-blue" />
+                          Distribuição por Disciplina
+                        </CardTitle>
+                        <CardDescription>
+                          Atividades por área de atuação filtradas
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <FilteredDisciplineDistributionChart selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
+                      </CardContent>
+                    </Card>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="activities" className="space-y-6">
@@ -382,40 +413,6 @@ function ReportsContent({ selectedWeek, selectedDiscipline, setSelectedWeek, set
                 </TabsContent>
 
                 <TabsContent value="issues" className="space-y-6">
-                  <FilteredMetricsCards selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
-                  
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <TrendingUp className="w-5 h-5 text-vale-blue" />
-                          Progresso das Atividades
-                        </CardTitle>
-                        <CardDescription>
-                          Distribuição do status das atividades filtradas
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <FilteredActivityProgressChart selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Users className="w-5 h-5 text-vale-blue" />
-                          Distribuição por Disciplina
-                        </CardTitle>
-                        <CardDescription>
-                          Atividades por área de atuação filtradas
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <FilteredDisciplineDistributionChart selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
-                      </CardContent>
-                    </Card>
-                  </div>
-
                   <IssuesCards selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
 
                   <Card>
