@@ -1,4 +1,4 @@
-import { Calendar, Home, Users, Settings, BarChart3, Eye, CheckCircle2, FileText, PlayCircle, Camera } from "lucide-react";
+import { Calendar, Home, Users, Settings, BarChart3, AlertTriangle, Eye, CheckCircle2, FileText, PlayCircle, Camera } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -39,6 +39,10 @@ export const menuItems = [{
   title: "Equipe",
   url: "/equipe",
   icon: Users
+}, {
+  title: "Alertas",
+  url: "/alertas",
+  icon: AlertTriangle
 }, {
   title: "Visão Geral",
   url: "/visao-geral",
