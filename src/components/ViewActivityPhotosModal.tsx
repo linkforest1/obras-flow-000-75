@@ -135,9 +135,8 @@ export function ViewActivityPhotosModal({
       const statusLabel = statusConfig[activityDetails.activity.status as keyof typeof statusConfig]?.label || activityDetails.activity.status;
       message += `📊 *Status:* ${statusLabel}\n`;
     }
-    if (activityDetails?.activity?.priority) {
-      const priorityLabel = priorityConfig[activityDetails.activity.priority as keyof typeof priorityConfig]?.label || activityDetails.activity.priority;
-      message += `🔥 *Prioridade:* ${priorityLabel}\n`;
+    if (activityDetails?.activity?.custom_id) {
+      message += `🆔 *ID Personalizado:* ${activityDetails.activity.custom_id}\n`;
     }
     if (activityDetails?.activity?.responsible_name) {
       message += `👤 *Responsável:* ${activityDetails.activity.responsible_name}\n`;
