@@ -13,6 +13,7 @@ import { FilteredActivityProgressChart } from "@/components/FilteredActivityProg
 import { WeeklyActivitiesTable } from "@/components/WeeklyActivitiesTable";
 import { FilteredDisciplineDistributionChart } from "@/components/FilteredDisciplineDistributionChart";
 import { IssuesCards } from "@/components/IssuesCards";
+
 import { usePDFExport } from "@/hooks/usePDFExport";
 import { useActivities } from "@/hooks/useActivities";
 import { useDailyReports } from "@/hooks/useDailyReports";
@@ -20,28 +21,18 @@ import { ReportsHeader } from "@/components/Reports/ReportsHeader";
 import { DeviationAnalysis } from "@/components/PDFReportLayout/DeviationAnalysis";
 import { FilterProvider, useFilters } from "@/contexts/FilterContext";
 import { FilterSheet } from "@/components/FilterSheet";
+
 export default function Reports() {
-  const {
-    user,
-    signOut
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
   const reportRef = useRef<HTMLDivElement>(null);
-  const {
-    exportToPDF,
-    isExporting
-  } = usePDFExport();
+  const { exportToPDF, isExporting } = usePDFExport();
   const [selectedWeek, setSelectedWeek] = useState<string>('all');
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-  const {
-    activities
-  } = useActivities();
-  const {
-    reports
-  } = useDailyReports();
+  const { activities } = useActivities();
+  const { reports } = useDailyReports();
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -57,6 +48,7 @@ export default function Reports() {
       });
     }
   };
+
   const handleExportPDF = async () => {
     console.log('Iniciando exportação com dados:', {
       activitiesCount: activities?.length,
@@ -65,46 +57,66 @@ export default function Reports() {
 
     // Filtrar atividades baseado na semana e disciplina selecionadas
     let filteredActivities = activities || [];
+    
     if (selectedWeek !== 'all') {
       filteredActivities = filteredActivities.filter(activity => String(activity.week) === selectedWeek);
     }
+    
     if (selectedDiscipline !== 'all') {
       filteredActivities = filteredActivities.filter(activity => activity.discipline === selectedDiscipline);
     }
 
     // Filtrar desvios baseado na semana selecionada (se necessário)
     const filteredReports = reports || [];
+
     const rdoData = {
       reports: filteredReports,
       deviationStats: getDeviationStats(filteredReports).stats,
       totalDeviations: getDeviationStats(filteredReports).total
     };
+
     const reportSuffix = [];
     if (selectedWeek !== 'all') reportSuffix.push(`semana-${selectedWeek}`);
     if (selectedDiscipline !== 'all') reportSuffix.push(`disciplina-${selectedDiscipline.replace(/\s+/g, '-').toLowerCase()}`);
-    const reportName = reportSuffix.length > 0 ? `relatorio-gerencial-${reportSuffix.join('-')}` : 'relatorio-gerencial-completo';
-    await exportToPDF(null, reportName, selectedWeek, filteredActivities, rdoData);
+    
+    const reportName = reportSuffix.length > 0 
+      ? `relatorio-gerencial-${reportSuffix.join('-')}`
+      : 'relatorio-gerencial-completo';
+
+    await exportToPDF(
+      null, 
+      reportName, 
+      selectedWeek, 
+      filteredActivities, 
+      rdoData
+    );
   };
+
   const getRecommendations = () => {
     if (!activities) return [];
     const recommendations = [];
-
+    
     // Filtrar atividades por semana e disciplina se necessário
     let filteredActivities = activities;
+    
     if (selectedWeek !== 'all') {
       filteredActivities = filteredActivities.filter(activity => String(activity.week) === selectedWeek);
     }
+    
     if (selectedDiscipline !== 'all') {
       filteredActivities = filteredActivities.filter(activity => activity.discipline === selectedDiscipline);
     }
+
     const delayedByDiscipline = filteredActivities.filter(a => a.status === 'delayed').reduce((acc: any, activity) => {
       const discipline = activity.discipline || 'Geral';
       acc[discipline] = (acc[discipline] || 0) + 1;
       return acc;
     }, {});
+
     const pendingCount = filteredActivities.filter(a => a.status === 'pending').length;
     const notCompletedCount = filteredActivities.filter(a => a.status === 'not-completed').length;
     const maxDelayedDiscipline = Object.entries(delayedByDiscipline).sort(([, a]: any, [, b]: any) => (b as number) - (a as number))[0];
+
     if (maxDelayedDiscipline) {
       recommendations.push({
         type: 'error',
@@ -112,6 +124,7 @@ export default function Reports() {
         description: `${maxDelayedDiscipline[1]} atividades estão em atraso`
       });
     }
+
     if (notCompletedCount > 0) {
       recommendations.push({
         type: 'error',
@@ -119,6 +132,7 @@ export default function Reports() {
         description: `${notCompletedCount} atividades não foram concluídas no prazo`
       });
     }
+
     if (pendingCount > 0) {
       recommendations.push({
         type: 'warning',
@@ -126,65 +140,80 @@ export default function Reports() {
         description: `${pendingCount} atividades aguardando início`
       });
     }
+
     return recommendations;
   };
+
   const getDeviationStats = (reportsList = reports) => {
-    if (!reportsList) return {
-      stats: {},
-      total: 0
-    };
+    if (!reportsList) return { stats: {}, total: 0 };
+
     const deviationStats = reportsList.filter(report => report.deviation_type && report.deviation_type !== 'none').reduce((acc: Record<string, number>, report) => {
       const type = report.deviation_type || 'Outros';
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {});
+
     const totalDeviations = Object.values(deviationStats).reduce((sum: number, count: number) => sum + count, 0);
-    return {
-      stats: deviationStats,
-      total: totalDeviations
-    };
+
+    return { stats: deviationStats, total: totalDeviations };
   };
-  const {
-    stats: deviationStats,
-    total: totalDeviations
-  } = getDeviationStats();
-  return <FilterProvider>
-      <ReportsContent selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} setSelectedWeek={setSelectedWeek} setSelectedDiscipline={setSelectedDiscipline} handleExportPDF={handleExportPDF} handleSignOut={handleSignOut} isExporting={isExporting} activities={activities} reports={reports} getRecommendations={getRecommendations} deviationStats={deviationStats} totalDeviations={totalDeviations} reportRef={reportRef} />
-    </FilterProvider>;
+
+  const { stats: deviationStats, total: totalDeviations } = getDeviationStats();
+
+  return (
+    <FilterProvider>
+      <ReportsContent 
+        selectedWeek={selectedWeek} 
+        selectedDiscipline={selectedDiscipline}
+        setSelectedWeek={setSelectedWeek} 
+        setSelectedDiscipline={setSelectedDiscipline}
+        handleExportPDF={handleExportPDF} 
+        handleSignOut={handleSignOut} 
+        isExporting={isExporting} 
+        activities={activities} 
+        reports={reports} 
+        getRecommendations={getRecommendations} 
+        deviationStats={deviationStats} 
+        totalDeviations={totalDeviations} 
+        reportRef={reportRef} 
+      />
+    </FilterProvider>
+  );
 }
-function ReportsContent({
-  selectedWeek,
-  selectedDiscipline,
-  setSelectedWeek,
-  setSelectedDiscipline,
-  handleExportPDF,
-  handleSignOut,
-  isExporting,
-  activities,
-  reports,
-  getRecommendations,
-  deviationStats,
-  totalDeviations,
-  reportRef
-}: any) {
+
+function ReportsContent({ selectedWeek, selectedDiscipline, setSelectedWeek, setSelectedDiscipline, handleExportPDF, handleSignOut, isExporting, activities, reports, getRecommendations, deviationStats, totalDeviations, reportRef }: any) {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-  const {
-    filters,
-    setFilters
-  } = useFilters();
+  const { filters, setFilters } = useFilters();
+
   const handleApplyFilters = (newFilters: any) => {
     setFilters(newFilters);
   };
-  return <SidebarProvider>
+
+  return (
+    <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <main className="flex-1 flex flex-col overflow-hidden bg-background pb-[60px] md:pb-0">
-          <ReportsHeader selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} onWeekChange={setSelectedWeek} onDisciplineChange={setSelectedDiscipline} onExportPDF={handleExportPDF} onSignOut={handleSignOut} isExporting={isExporting} />
+          <ReportsHeader 
+            selectedWeek={selectedWeek} 
+            selectedDiscipline={selectedDiscipline}
+            onWeekChange={setSelectedWeek} 
+            onDisciplineChange={setSelectedDiscipline}
+            onExportPDF={handleExportPDF} 
+            onSignOut={handleSignOut} 
+            isExporting={isExporting} 
+          />
 
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             <div ref={reportRef} className="space-y-6">
               <div className="flex justify-between items-center">
-                <FilterSheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen} activities={activities || []} onApplyFilters={handleApplyFilters} initialFilters={filters} />
+                <FilterSheet 
+                  open={isFilterSheetOpen} 
+                  onOpenChange={setIsFilterSheetOpen} 
+                  activities={activities || []} 
+                  onApplyFilters={handleApplyFilters} 
+                  initialFilters={filters} 
+                />
               </div>
 
               <Tabs defaultValue="overview" className="space-y-6">
@@ -273,7 +302,7 @@ function ReportsContent({
                 </TabsContent>
 
                 <TabsContent value="performance" className="space-y-6">
-                  
+                  <FilteredMetricsCards selectedWeek={selectedWeek} selectedDiscipline={selectedDiscipline} />
                   
                   <Card>
                     <CardHeader>
@@ -346,7 +375,9 @@ function ReportsContent({
                           </CardHeader>
                           <CardContent>
                             <div className="space-y-4">
-                              {reports && reports.length > 0 ? reports.slice(0, 5).map((report: any) => <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg">
+                              {reports && reports.length > 0 ? (
+                                reports.slice(0, 5).map((report: any) => (
+                                  <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg">
                                     <div className="space-y-1">
                                       <p className="font-medium">{report.title}</p>
                                       <p className="text-sm text-muted-foreground">
@@ -354,17 +385,25 @@ function ReportsContent({
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      {report.deviation_type && report.deviation_type !== 'none' ? <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                                      {report.deviation_type && report.deviation_type !== 'none' ? (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
                                           <AlertTriangle className="w-3 h-3 mr-1" />
                                           {report.deviation_type}
-                                        </span> : <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
                                           <CheckCircle2 className="w-3 h-3 mr-1" />
                                           Conforme
-                                        </span>}
+                                        </span>
+                                      )}
                                     </div>
-                                  </div>) : <p className="text-center text-muted-foreground py-4">
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-center text-muted-foreground py-4">
                                   Nenhum desvio encontrado para o período selecionado.
-                                </p>}
+                                </p>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -385,20 +424,28 @@ function ReportsContent({
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {getRecommendations().map((rec: any, index: number) => <div key={index} className={`flex items-start gap-3 p-3 rounded-lg ${rec.type === 'error' ? 'bg-red-50 dark:bg-red-950' : 'bg-yellow-50 dark:bg-yellow-950'}`}>
-                            {rec.type === 'error' ? <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" /> : <CheckCircle2 className="w-5 h-5 text-yellow-600 mt-0.5" />}
+                        {getRecommendations().map((rec: any, index: number) => (
+                          <div key={index} className={`flex items-start gap-3 p-3 rounded-lg ${rec.type === 'error' ? 'bg-red-50 dark:bg-red-950' : 'bg-yellow-50 dark:bg-yellow-950'}`}>
+                            {rec.type === 'error' ? (
+                              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+                            ) : (
+                              <CheckCircle2 className="w-5 h-5 text-yellow-600 mt-0.5" />
+                            )}
                             <div>
                               <p className="font-medium">{rec.title}</p>
                               <p className="text-sm text-muted-foreground">{rec.description}</p>
                             </div>
-                          </div>)}
-                        {getRecommendations().length === 0 && <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+                          </div>
+                        ))}
+                        {getRecommendations().length === 0 && (
+                          <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                             <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
                             <div>
                               <p className="font-medium">Tudo funcionando bem!</p>
                               <p className="text-sm text-muted-foreground">Não há problemas críticos no momento</p>
                             </div>
-                          </div>}
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -409,5 +456,6 @@ function ReportsContent({
         </main>
       </div>
       <BottomNavBar />
-    </SidebarProvider>;
+    </SidebarProvider>
+  );
 }
