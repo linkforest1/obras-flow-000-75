@@ -6,13 +6,13 @@ import { useActivities } from "@/hooks/useActivities";
 import { useFilters } from "@/contexts/FilterContext";
 
 interface FilteredMetricsCardsProps {
-  selectedWeek?: string;
-  selectedDiscipline?: string;
+  selectedWeeks?: string[];
+  selectedDisciplines?: string[];
 }
 
 export function FilteredMetricsCards({
-  selectedWeek,
-  selectedDiscipline
+  selectedWeeks = [],
+  selectedDisciplines = []
 }: FilteredMetricsCardsProps) {
   const { activities } = useActivities();
   const { filters } = useFilters();
@@ -35,15 +35,15 @@ export function FilteredMetricsCards({
     );
   }
 
-  // Aplicar filtros incluindo selectedWeek e selectedDiscipline se fornecidos
+  // Aplicar filtros incluindo selectedWeeks e selectedDisciplines se fornecidos
   const filteredActivities = activities.filter(activity => {
-    // Filtro por semana selecionada se fornecido
-    if (selectedWeek && selectedWeek !== 'all' && String(activity.week) !== selectedWeek) {
+    // Filtro por semanas selecionadas se fornecido
+    if (selectedWeeks.length > 0 && !selectedWeeks.includes(String(activity.week))) {
       return false;
     }
     
-    // Filtro por disciplina selecionada se fornecido
-    if (selectedDiscipline && selectedDiscipline !== 'all' && activity.discipline !== selectedDiscipline) {
+    // Filtro por disciplinas selecionadas se fornecido
+    if (selectedDisciplines.length > 0 && !selectedDisciplines.includes(activity.discipline || '')) {
       return false;
     }
 
@@ -79,7 +79,7 @@ export function FilteredMetricsCards({
   const notCompletedCount = filteredActivities.filter(a => a.status === 'not-completed').length;
 
   const completionRate = totalActivities > 0 ? Math.round((completedCount / totalActivities) * 100) : 0;
-  const weekLabel = selectedWeek && selectedWeek !== 'all' ? `Semana ${selectedWeek}` : 'Filtros aplicados';
+  const weekLabel = selectedWeeks.length > 0 ? `${selectedWeeks.length} semana(s)` : 'Filtros aplicados';
   
   // Calcular média de progresso da semana
   const averageProgress = totalActivities > 0 

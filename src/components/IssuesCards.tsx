@@ -5,11 +5,11 @@ import { AlertTriangle, Calendar, CheckCircle2 } from "lucide-react";
 import { useActivities } from "@/hooks/useActivities";
 
 interface IssuesCardsProps {
-  selectedWeek: string;
-  selectedDiscipline?: string;
+  selectedWeeks?: string[];
+  selectedDisciplines?: string[];
 }
 
-export function IssuesCards({ selectedWeek, selectedDiscipline }: IssuesCardsProps) {
+export function IssuesCards({ selectedWeeks = [], selectedDisciplines = [] }: IssuesCardsProps) {
   const { activities } = useActivities();
 
   if (!activities) {
@@ -30,12 +30,12 @@ export function IssuesCards({ selectedWeek, selectedDiscipline }: IssuesCardsPro
     );
   }
 
-  // Aplicar filtros de semana e disciplina
+  // Aplicar filtros de semanas e disciplinas
   const filteredActivities = activities.filter(activity => {
-    if (selectedWeek !== 'all' && String(activity.week) !== selectedWeek) {
+    if (selectedWeeks.length > 0 && !selectedWeeks.includes(String(activity.week))) {
       return false;
     }
-    if (selectedDiscipline && selectedDiscipline !== 'all' && activity.discipline !== selectedDiscipline) {
+    if (selectedDisciplines.length > 0 && !selectedDisciplines.includes(activity.discipline || '')) {
       return false;
     }
     return true;
